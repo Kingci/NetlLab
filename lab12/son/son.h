@@ -10,7 +10,7 @@
 #include "neighbortable.h"
 #include "../common/constants.h"
 nbr_entry_t* nt; 
-int nnum ;
+//int nnum ;
 // 这个线程打开TCP端口CONNECTION_PORT, 等待节点ID比自己大的所有邻居的进入连接,
 // 在所有进入连接都建立后, 这个线程终止.
 void* waitNbrs(void* arg);

@@ -200,7 +200,7 @@ int main() {
 
 	//打印所有邻居
 	int nbrNum = topology_getNbrNum();
-	nnum=nbrNum;
+//	nnum=nbrNum;
 	int i;
 	for(i=0;i<nbrNum;i++) {
 		printf("Overlay network: neighbor %d:%d\n",i+1,nt[i].nodeID);

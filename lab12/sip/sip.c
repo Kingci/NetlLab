@@ -69,7 +69,7 @@ void* routeupdate_daemon(void* arg) {
 	while(1){
 		sip_pkt_t *s =(sip_pkt_t *)malloc(sizeof(sip_pkt_t ));
 		s->header.src_nodeID = topology_getMyNodeID();
-		s->header.type = ROUTEUPDATE;
+		s->header.type = ROUTE_UPDATE;
 		s->header.dest_nodeID = BROADCAST_NODEID;
 		son_sendpkt(BROADCAST_NODEID,s,sockfd);
 		sleep(15);
@@ -86,7 +86,7 @@ void* pkthandler(void* arg) {
 		printf("***********************Receive Packet**********************\n");
 		printf("src_nodeid :%d\n",pkt.header.src_nodeID);
 		printf("dst_nodeid :%d\n",pkt.header.dest_nodeID);
-		if(pkt.header.type == ROUTEUPDATE){
+		if(pkt.header.type == ROUTE_UPDATE){
 			printf("type:ROUTE_UPDATA \n");
 		}
 	}

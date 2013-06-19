@@ -253,9 +253,6 @@ int recvpkt(sip_pkt_t* pkt, int conn)
 	if(state != 4){
 		return -1;
 	}
-	//sendpkt_arg_t *packet=(sip_pkt_t*)&buffer;
-//	printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!2121212\n");
 	memcpy(pkt, &buffer, pos);
-//	printf("end recvpkt\n");
 	return 1;
 }

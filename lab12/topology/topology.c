@@ -66,8 +66,8 @@ int topology_getMyNodeID()
 int topology_getNbrNum()
 {
 	int num = 0;
-	save_t *neighbor;
-	for (neighbor = st; neighbor!=NULL; neighbor=neighbor->next){
+	neigh_t *neighbor;
+	for (neighbor = neighbort; neighbor!=NULL; neighbor=neighbor->next){
 		if(neighbor->Node1 == hostID || neighbor->Node2 == hostID){
 			num ++;
 		}
@@ -80,8 +80,8 @@ int topology_getNbrNum()
 int topology_getNodeNum()
 { 
 	int node_num=0;
-	save_t *neighbor;
-	for(neighbor = st; neighbor != NULL; neighbor = neighbor->next){
+	neigh_t *neighbor;
+	for(neighbor = neighbort; neighbor != NULL; neighbor = neighbor->next){
 			node_num ++;
 	}
 	return node_num;
@@ -93,8 +93,8 @@ int* topology_getNodeArray()
 {
 	int node_num=0;
 	int *rs=(int *)malloc(20 * sizeof(int));
-	save_t *neighbor;
-	for(neighbor = st; neighbor != NULL; neighbor = neighbor->next){
+	neigh_t *neighbor;
+	for(neighbor = neighbort; neighbor != NULL; neighbor = neighbor->next){
 		if(node_num == 0){
 			rs[0] = neighbor->Node1;
 			rs[1] = neighbor->Node2;
@@ -122,8 +122,8 @@ int* topology_getNbrArray()
 {
 	int *rs = (int *)malloc(20 * sizeof(int));
 	int num = 0;
-	save_t *neighbor;
-	for (neighbor = st; neighbor != NULL; neighbor = neighbor->next){
+	neigh_t *neighbor;
+	for (neighbor = neighbort; neighbor != NULL; neighbor = neighbor->next){
 		if(neighbor->Node1 == hostID){
 			rs[num ++] = neighbor->Node2;
 		}
@@ -139,8 +139,8 @@ int* topology_getNbrArray()
 //如果指定两个节点之间没有直接链路, 返回INFINITE_COST.
 unsigned int topology_getCost(int fromNodeID, int toNodeID)
 {
-	save_t *neighbor;
-	for(neighbor = st; neighbor != NULL; neighbor = neighbor->next){
+	neigh_t *neighbor;
+	for(neighbor = neighbort; neighbor != NULL; neighbor = neighbor->next){
 		if((neighbor->Node1 == fromNodeID && neighbor->Node2 == toNodeID) || 
 			(neighbor->Node2 == fromNodeID && neighbor->Node1 == toNodeID)){
 			return neighbor->cost;

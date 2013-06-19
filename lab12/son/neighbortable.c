@@ -20,7 +20,7 @@ nbr_entry_t* nt_create()
 		char delims[] = " ";
 		char *host = NULL;
 		int i = 0;
-		save_t *nh = (save_t *)malloc(sizeof(save_t));
+		neigh_t *nh = (neigh_t *)malloc(sizeof(neigh_t));
 		for(host = strtok(rs, delims); host != NULL; i ++, host=strtok( NULL, delims)) {
 			int hostID = host[9] - '0' + 184;
 			switch(i){
@@ -39,8 +39,8 @@ nbr_entry_t* nt_create()
 				case 2:{
 					printf( "the cost of these hosts is %s\n", host );
 					nh->cost = host[0] - '0';
-					nh->next = st;
-					st = nh;
+					nh->next = neighbort;
+					neighbort = nh;
 					break;
 				}
 			}
@@ -92,7 +92,7 @@ int nt_addconn(nbr_entry_t* nt, int nodeID, int conn)
 		char delims[] = " ";
 		char *host = NULL;
 		int i = 0;
-		save_t *nh = (save_t *)malloc(sizeof(save_t));
+		neigh_t *nh = (neigh_t *)malloc(sizeof(neigh_t));
 		for(host = strtok(rs, delims); host != NULL; i ++, host=strtok( NULL, delims)) {
 			int hostID = host[9] - '0' + 184;
 			if(i == 0)
@@ -101,8 +101,8 @@ int nt_addconn(nbr_entry_t* nt, int nodeID, int conn)
 				nh->Node2 = hostID;
 			if(i == 2){
 				nh->cost = host[0] - '0';
-				nh->next = st;
-				st = nh;
+				nh->next = neighbort;
+				neighbort = nh;
 			}
 		}  
 	}

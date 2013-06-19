@@ -14,14 +14,14 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-typedef struct savet
+typedef struct neight
 {
 	int Node1;
 	int Node2;
 	int cost;
-	struct savet * next;
-}save_t;
-save_t *st;
+	struct neight * next;
+}neigh_t;
+neigh_t *neighbort;
 //这个函数返回指定主机的节点ID.
 //节点ID是节点IP地址最后8位表示的整数.
 //例如, 一个节点的IP地址为202.119.32.12, 它的节点ID就是12.
