@@ -10,35 +10,25 @@
 // 如果发送成功, 返回1, 否则返回-1.
 int son_sendpkt(int nextNodeID, sip_pkt_t* pkt, int son_conn)
 {
-	printf("enter sonsendpkt\n");
-  	int a=0;
-	char *msg="!&";
-	int len=2;
-	a=send(son_conn,msg,len,0);
-	if(a!=2){
-		printf("senderror1\n");
+	printf("***********************SIP send packet to SON**********************\n");
+	if (send(son_conn, "!&", 2, 0) < 0) {
+		perror("Error in sending data(son_sendpkt)\n");
 		return -1;
 	}
-	len=pkt->header.length;
-	sendpkt_arg_t *p= (sendpkt_arg_t *)malloc(sizeof(sendpkt_arg_t));
-	p->nextNodeID=nextNodeID;
-	printf("%d!!!!!!\n",p->nextNodeID);
-	p->pkt=*pkt;
-	printf("sendbuflen:%d",len);;
-	a=send(son_conn,(void*)p,sizeof(sendpkt_arg_t),0);
-	if(a!=sizeof(sendpkt_arg_t)){
-		printf("senderror2\n");
+//	printf("sendbuflen:%d",pkt->header.length);
+	sendpkt_arg_t *packet = (sendpkt_arg_t *)malloc(sizeof(sendpkt_arg_t));
+	packet->nextNodeID = nextNodeID;
+	packet->pkt = *pkt;
+	if(send(son_conn, (void*)packet, sizeof(sendpkt_arg_t), 0) < 0){
+		perror("Error in sending data(son_sendpkt)\n");
 		return -1;
 	}
-	char *msg2="!#";
-	len=2;
-	a=send(son_conn,(void*)msg2,len,0);
-	if(a!=len){
-		printf("senderror3\n");
+	
+	if (send(son_conn, "!#", 2, 0) < 0) {
+		perror("Error in sending data(son_sendpkt)\n");
 		return -1;
 	}
-	printf("end sonsendpkt\n");
-  return 1;
+	return 1;
 }
 
 // son_recvpkt()函数由SIP进程调用, 其作用是接收来自SON进程的报文. 
@@ -51,60 +41,52 @@ int son_sendpkt(int nextNodeID, sip_pkt_t* pkt, int son_conn)
 // 如果成功接收报文, 返回1, 否则返回-1.
 int son_recvpkt(sip_pkt_t* pkt, int son_conn)
 {
-	//printf("enter son_recvpkt\n");
- 	int state=0;
+	printf("***********************SIP receive packet from SON**********************\n");
+  	int state=0;
 	char buffer[1600];
-	int i=0;
+	int pos=0;
 	char buf;
-	int t;
 	while(1){
-		t=recv(son_conn,&buf,1,0);
-		if(t<=0)
+		if(recv(son_conn,&buf,1,0)<=0)
 			break;
 		switch(state){
-		case 0:
-			if(buf=='!')
-				state=1;
-			break;
-		case 1:
-			if(buf=='&')
-				state=2;
-			break;
-		case 2:
-			if(buf=='!'){
-				buffer[i++]=buf;
-				t=recv(son_conn,&buf,1,0);
-				if(buf=='#'){
-					state=4;
-					i--;
+			case 0:
+				if(buf == '!')
+					state = 1;
+				break;
+			case 1:
+				if(buf == '&')
+					state = 2;
+				break;
+			case 2:
+				if(buf == '!'){
+					//如果是#结束，如果！后面不是#则证明是所要传输的数据
+					buffer[pos ++] = buf;
+					recv(son_conn, &buf, 1, 0);
+					if(buf == '#'){
+						state = 4;
+						pos --;
+					}
+					else
+						buffer[pos ++] = buf;
 				}
-				else{
-					buffer[i++]=buf;
-				}
-			}
-			else
-				buffer[i++]=buf;
-			break;
-		case 3:
-			if(buf=='#')
-				state=4;
-			break;
-		case 4:
-			break;
+				else
+					buffer[pos ++] = buf;
+				break;
+			case 3:
+				if(buf == '#')
+					state = 4;
+				break;
 		}
-		if(state==4)
+		if(state == 4)
 			break;
-		
 	}
-	if(state!=4){
-
-		printf("%d",state);
-		printf("wrong\n");
+	if(state != 4){
 		return -1;
 	}
-	//sendpkt_arg_t *p=(sip_pkt_t*)&buffer;
-	memcpy(pkt,&buffer,i);
-  return 1;
+	//sendpkt_arg_t *packet=(sip_pkt_t*)&buffer;
+	memcpy(pkt, &buffer, pos);
+	return 1;
 }
 
 // 这个函数由SON进程调用, 其作用是接收数据结构sendpkt_arg_t.
@@ -119,59 +101,54 @@ int son_recvpkt(sip_pkt_t* pkt, int son_conn)
 // 如果成功接收sendpkt_arg_t结构, 返回1, 否则返回-1.
 int getpktToSend(sip_pkt_t* pkt, int* nextNode,int sip_conn)
 {
-	printf("enter getpktToSend\n");
+	printf("***********************SON receive packet from SIP**********************\n");
   	int state=0;
 	char buffer[1600];
-	int i=0;
+	int pos=0;
 	char buf;
-	int t;
 	while(1){
-		t=recv(sip_conn,&buf,1,0);
-		if(t<=0)
+		if(recv(sip_conn,&buf,1,0)<=0)
 			break;
 		switch(state){
-		case 0:
-			if(buf=='!')
-				state=1;
-			break;
-		case 1:
-			if(buf=='&')
-				state=2;
-			break;
-		case 2:
-			if(buf=='!'){
-				buffer[i++]=buf;
-				t=recv(sip_conn,&buf,1,0);
-				if(buf=='#'){
-					state=4;
-					i--;
+			case 0:
+				if(buf == '!')
+					state = 1;
+				break;
+			case 1:
+				if(buf == '&')
+					state = 2;
+				break;
+			case 2:
+				if(buf == '!'){
+					//如果是#结束，如果！后面不是#则证明是所要传输的数据
+					buffer[pos ++] = buf;
+					recv(sip_conn, &buf, 1, 0);
+					if(buf == '#'){
+						state = 4;
+						pos --;
+					}
+					else
+						buffer[pos ++] = buf;
 				}
-				else{
-					buffer[i++]=buf;
-				}
-			}
-			else
-				buffer[i++]=buf;
-			break;
-		case 3:
-			if(buf=='#')
-				state=4;
-			break;
-		case 4:
-			break;
+				else
+					buffer[pos ++] = buf;
+				break;
+			case 3:
+				if(buf == '#')
+					state = 4;
+				break;
 		}
-		if(state==4)
+		if(state == 4)
 			break;
-		
 	}
-	if(state!=4){
+	if(state != 4){
 		return -1;
 	}
-	sendpkt_arg_t *p=(sendpkt_arg_t *)&buffer;
-	*pkt=p->pkt;
-	*nextNode=p->nextNodeID;
-	printf("end getpktToSend\n");
-  return 1;
+	sendpkt_arg_t *packet = (sendpkt_arg_t *)&buffer;
+	*pkt = packet->pkt;
+	*nextNode = packet->nextNodeID;
+//	printf("end getpktToSend\n");
+	return 1;
 }
 
 // forwardpktToSIP()函数是在SON进程接收到来自重叠网络中其邻居的报文后被调用的. 
@@ -181,32 +158,21 @@ int getpktToSend(sip_pkt_t* pkt, int* nextNode,int sip_conn)
 // 如果报文发送成功, 返回1, 否则返回-1.
 int forwardpktToSIP(sip_pkt_t* pkt, int sip_conn)
 {
-	printf("enter forwardpktToSIP\n");
-    int a=0;
-	char *msg="!&";
-	int len=2;
-	a=send(sip_conn,msg,len,0);
-	if(a!=2){
-		printf("senderror1\n");
+	printf("***********************SON send packet to SIP**********************\n");
+    if (send(sip_conn, "!&", 2, 0) < 0) {
+		perror("Error in sending data(forwardpktToSIP)\n");
+		return -1;
+	}	
+//	printf("sendbuflen:%d",pkt->header.length);
+	if(send(sip_conn,(void*)pkt,sizeof(sip_pkt_t),0) < 0){
+		printf("Error in sending data(forwardpktToSIP)\n");
 		return -1;
 	}
-	len=pkt->header.length;
-	/*sip_pkt_t *p= (sip_pkt_t *)malloc(sizeof(sip_pkt_t));
-	p=*pkt;*/
-	printf("sendbuflen:%d",len);
-	a=send(sip_conn,(void*)pkt,sizeof(sip_pkt_t),0);
-	if(a!=sizeof(sip_pkt_t)){
-		printf("senderror2\n");
+	if (send(sip_conn, "!#", 2, 0) < 0) {
+		perror("Error in sending data(forwardpktToSIP)\n");
 		return -1;
 	}
-	char *msg2="!#";
-	len=2;
-	a=send(sip_conn,(void*)msg2,len,0);
-	if(a!=len){
-		printf("senderror3\n");
-		return -1;
-	}
-  return 1;
+	return 1;
 }
 
 // sendpkt()函数由SON进程调用, 其作用是将接收自SIP进程的报文发送给下一跳.
@@ -215,33 +181,22 @@ int forwardpktToSIP(sip_pkt_t* pkt, int sip_conn)
 // 如果报文发送成功, 返回1, 否则返回-1.
 int sendpkt(sip_pkt_t* pkt, int conn)
 {
-	printf("enter sendpkt\n");
-    int a=0;
-	char *msg="!&";
-	int len=2;
-	a=send(conn,msg,len,0);
-	if(a!=2){
-		printf("senderror1\n");
+	printf("***********************SON send packet to Next Hop**********************\n");
+
+	if (send(conn, "!&", 2, 0) < 0) {
+		perror("Error in sending data(sendpkt)\n");
+		return -1;
+	}	
+//	printf("sendbuflen:%d",pkt->header.length);
+	if(send(conn,(void*)pkt, sizeof(sip_pkt_t), 0) < 0){
+		printf("Error in sending data(sendpkt)\n");
 		return -1;
 	}
-	len=pkt->header.length;
-	/*sip_pkt_t *p= (sip_pkt_t *)malloc(sizeof(sip_pkt_t));
-	p=*pkt;*/
-	printf("sendbuflen:%d",len);
-	a=send(conn,(void*)pkt,sizeof(sip_pkt_t),0);
-	if(a!=sizeof(sip_pkt_t)){
-		printf("senderror2\n");
+	if (send(conn, "!#", 2, 0) < 0) {
+		perror("Error in sending data(sendpkt)\n");
 		return -1;
 	}
-	char *msg2="!#";
-	len=2;
-	a=send(conn,(void*)msg2,len,0);
-	if(a!=len){
-		printf("senderror3\n");
-		return -1;
-	}
-	printf("end sendpkt\n");
-  return 1;
+	return 1;
 }
 
 // recvpkt()函数由SON进程调用, 其作用是接收来自重叠网络中其邻居的报文.
@@ -255,60 +210,52 @@ int sendpkt(sip_pkt_t* pkt, int conn)
 // 如果成功接收报文, 返回1, 否则返回-1.
 int recvpkt(sip_pkt_t* pkt, int conn)
 {
-	//printf("enter recvpkt\n");
-   	int state=0;
+	printf("***********************SON receive packet from Next Hop**********************\n");
+  	int state=0;
 	char buffer[1600];
-	int i=0;
+	int pos=0;
 	char buf;
-	int t;
 	while(1){
-		t=recv(conn,&buf,1,0);
-		if(t<=0)
-			return -1;
+		if(recv(conn,&buf,1,0)<=0)
+			break;
 		switch(state){
-		case 0:
-			if(buf=='!')
-				state=1;
-			break;
-		case 1:
-			if(buf=='&')
-				state=2;
-			break;
-		case 2:
-			if(buf=='!'){
-				buffer[i++]=buf;
-				t=recv(conn,&buf,1,0);
-				if(buf=='#'){
-					state=4;
-					i--;
+			case 0:
+				if(buf == '!')
+					state = 1;
+				break;
+			case 1:
+				if(buf == '&')
+					state = 2;
+				break;
+			case 2:
+				if(buf == '!'){
+					//如果是#结束，如果！后面不是#则证明是所要传输的数据
+					buffer[pos ++] = buf;
+					recv(conn, &buf, 1, 0);
+					if(buf == '#'){
+						state = 4;
+						pos --;
+					}
+					else
+						buffer[pos ++] = buf;
 				}
-				else{
-					buffer[i++]=buf;
-				}
-			}
-			else
-				buffer[i++]=buf;
-			break;
-		case 3:
-			if(buf=='#')
-				state=4;
-			break;
-		case 4:
-			break;
+				else
+					buffer[pos ++] = buf;
+				break;
+			case 3:
+				if(buf == '#')
+					state = 4;
+				break;
 		}
-		if(state==4)
+		if(state == 4)
 			break;
-		
 	}
-	if(state!=4){
-
-		printf("%d",state);
-		printf("wrong\n");
+	if(state != 4){
 		return -1;
 	}
-	//sendpkt_arg_t *p=(sip_pkt_t*)&buffer;
-	printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!2121212\n");
-	memcpy(pkt,&buffer,i);
-	printf("end recvpkt\n");
-  return 1;
+	//sendpkt_arg_t *packet=(sip_pkt_t*)&buffer;
+//	printf("!!!!!!!!!!!!!!!!!!!!!!!!!!!2121212\n");
+	memcpy(pkt, &buffer, pos);
+//	printf("end recvpkt\n");
+	return 1;
 }

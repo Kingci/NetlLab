@@ -83,7 +83,7 @@ void* routeupdate_daemon(void* arg) {
 void* pkthandler(void* arg) {
 	sip_pkt_t pkt;
 	while(son_recvpkt(&pkt,son_conn)>0) {
-		printf("********************Receive Packet*******************\n");
+		printf("***********************Receive Packet**********************\n");
 		printf("src_nodeid :%d\n",pkt.header.src_nodeID);
 		printf("dst_nodeid :%d\n",pkt.header.dest_nodeID);
 		if(pkt.header.type == ROUTEUPDATE){

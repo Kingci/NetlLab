@@ -48,7 +48,7 @@ nbr_entry_t* nt_create()
 	}
 	
 	neighNum = topology_getNbrNum();
-	printf("the num of neibors is %d\n", neighNum);
+	printf("the num of neibors is %d\n\n", neighNum);
 	nbr_entry_t * neighEntry = (nbr_entry_t *)malloc(sizeof(nbr_entry_t) * neighNum);
 	int *neighArray = topology_getNbrArray();
 	int i =0;
