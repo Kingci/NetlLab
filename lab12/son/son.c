@@ -77,7 +77,7 @@ void* waitNbrs(void* arg) {
 			}
 		}
 	}
-	return NULL;
+	pthread_exit(NULL);
 }
 
 // 这个函数连接到节点ID比自己小的所有邻居.
