@@ -66,17 +66,12 @@ int connectToSON() {
 //在本实验中, 这个线程只广播空的路由更新报文给所有邻居, 
 //我们通过设置SIP报文首部中的dest_nodeID为BROADCAST_NODEID来发送广播
 void* routeupdate_daemon(void* arg) {
-	printf("routeupdate_daemon\n");
 	while(1){
-		printf("send!!!!3\n");
 		sip_pkt_t *s =(sip_pkt_t *)malloc(sizeof(sip_pkt_t ));
-		int t=topology_getMyNodeID();
-		s->header.src_nodeID=t;
-		s->header.type=1;
-		s->header.length=0;
-		printf("send!!!!1\n");
-		s->header.dest_nodeID=9999;
-		son_sendpkt(9999,s,sockfd);
+		s->header.src_nodeID = topology_getMyNodeID();
+		s->header.type = ROUTEUPDATE;
+		s->header.dest_nodeID = BROADCAST_NODEID;
+		son_sendpkt(BROADCAST_NODEID,s,sockfd);
 		sleep(15);
 	}
   return 0;
@@ -86,19 +81,18 @@ void* routeupdate_daemon(void* arg) {
 //它通过调用son_recvpkt()接收来自SON进程的报文
 //在本实验中, 这个线程在接收到报文后, 只是显示报文已接收到的信息, 并不处理报文 
 void* pkthandler(void* arg) {
-	printf("pkthandler\n");
 	sip_pkt_t pkt;
 	while(son_recvpkt(&pkt,son_conn)>0) {
-		printf("addr new packet\n");
+		printf("********************Receive Packet*******************\n");
 		printf("src_nodeid :%d\n",pkt.header.src_nodeID);
 		printf("dst_nodeid :%d\n",pkt.header.dest_nodeID);
-		printf("length: %d\n",pkt.header.length);
-		if(pkt.header.type==1){
+		if(pkt.header.type == ROUTEUPDATE){
 			printf("type:ROUTE_UPDATA \n");
 		}
 	}
-	close(son_conn);
+/*	close(son_conn);
 	son_conn = -1;
+	*/
 	pthread_exit(NULL);
 }
 
